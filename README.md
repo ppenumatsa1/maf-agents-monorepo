@@ -33,29 +33,29 @@ Each agent is an independently deployable FastAPI service following the same lay
 Install the required tools on Ubuntu/Debian:
 
 1. Update packages
-	- sudo apt-get update
+   - sudo apt-get update
 2. Install Python 3.11 and venv
-	- sudo apt-get install -y python3.11 python3.11-venv python3-pip
+   - sudo apt-get install -y python3.11 python3.11-venv python3-pip
 3. Install Docker (for container builds)
-	- sudo apt-get install -y docker.io
+   - sudo apt-get install -y docker.io
 4. Install Azure CLI
-	- curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+   - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 5. Install Azure Developer CLI (azd)
-	- curl -fsSL https://aka.ms/install-azd.sh | sudo bash
+   - curl -fsSL https://aka.ms/install-azd.sh | sudo bash
 6. Install Make (optional)
-	- sudo apt-get install -y make
+   - sudo apt-get install -y make
 
 ## Quickstart (azd)
 
 1. Clone the repo and enter it
-	- git clone https://github.com/ppenumatsa1/maf-agents-monorepo.git
-	- cd maf-agents-monorepo
+   - git clone https://github.com/ppenumatsa1/maf-agents-monorepo.git
+   - cd maf-agents-monorepo
 2. Verify Docker is running
-	- docker version
+   - docker version
 3. Authenticate and run azd
-	- azd auth login
-	- azd env new
-	- azd up
+   - azd auth login
+   - azd env new
+   - azd up
 
 ## Local Development
 
@@ -78,8 +78,8 @@ Run the smoke tests against the deployed endpoint:
 
 Each agent owns design artifacts under docs/design (PRD, tech stack, project structure, user flow).
 
-| Agent | Workflow | Docs |
-| --- | --- | --- |
+| Agent               | Workflow                           | Docs                            |
+| ------------------- | ---------------------------------- | ------------------------------- |
 | 01-researcher-agent | Research → write → review workflow | agents/01-researcher-agent/docs |
 
 ## License
