@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: maf-agents-monorepo
+metadata:
+  template: custom
+hooks:
+  preprovision:
+    shell: sh
+    run: ./infra/hooks/preprovision.sh
+    continueOnError: false
+  postprovision:
+    shell: sh
+    run: ./infra/hooks/postprovision.sh
+    continueOnError: false
+services:
+  researcher-agent:
+    project: ./agents/01-researcher-agent
+    language: python
+    host: containerapp
+    resourceName: researcher-agent
+    image: researcher-agent
+    docker:
+      path: ./Dockerfile
+      context: .
+    hooks:
+      predeploy:
+        shell: sh
+        run: ../../infra/hooks/predeploy.sh
+infra:
+  path: infra
