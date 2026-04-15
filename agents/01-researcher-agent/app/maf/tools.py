@@ -1,36 +1,43 @@
+import json
+
+import httpx
 from agent_framework import tool
 
 from app.core.observability.telemetry import start_span
 
 
 @tool(approval_mode="never_require")
-def extract_key_points(text: str) -> str:
-    """Extract key points from a text input."""
-    with start_span("app.tool.extract_key_points", {"text.length": len(text or "")}):
-        if not text:
-            return "No content provided."
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        bullets = lines[:5]
-        return "\n".join(f"- {line}" for line in bullets) or "No key points found."
+def web_search(topic: str, max_results: int = 5) -> str:
+    """Search DuckDuckGo Instant Answer API and return compact JSON payload."""
+    with start_span(
+        "app.tool.web_search",
+        {"topic.length": len(topic or ""), "max_results": max_results},
+    ):
+        params = {
+            "q": topic,
+            "format": "json",
+            "no_redirect": "1",
+            "no_html": "1",
+        }
+        response = httpx.get("https://api.duckduckgo.com/", params=params, timeout=15.0)
+        response.raise_for_status()
+        payload = response.json()
 
+        results: list[dict[str, str]] = []
+        for item in payload.get("RelatedTopics", []):
+            if len(results) >= max_results:
+                break
+            text = item.get("Text")
+            first_url = item.get("FirstURL")
+            if not text or not first_url:
+                continue
+            results.append(
+                {
+                    "title": text.split(" - ")[0][:120],
+                    "url": first_url,
+                    "source": "DuckDuckGo",
+                    "snippet": text,
+                }
+            )
 
-@tool(approval_mode="never_require")
-def build_outline(topic: str) -> str:
-    """Generate a lightweight outline for the topic."""
-    with start_span("app.tool.build_outline", {"topic.length": len(topic or "")}):
-        return (
-            f"Outline for {topic}:\n"
-            "1. Background\n"
-            "2. Key Findings\n"
-            "3. Implications\n"
-            "4. Recommendations"
-        )
-
-
-@tool(approval_mode="never_require")
-def review_draft(draft: str) -> str:
-    """Provide quick review notes for a draft."""
-    with start_span("app.tool.review_draft", {"draft.length": len(draft or "")}):
-        if not draft:
-            return "No draft provided for review."
-        return "Review: check clarity, evidence, and missing caveats."
+        return json.dumps({"topic": topic, "results": results}, indent=2)

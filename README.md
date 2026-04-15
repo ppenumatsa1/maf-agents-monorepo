@@ -91,10 +91,10 @@ Enable Entra auth locally by setting `REQUIRE_AUTH=true` and supplying required 
 - App emits OpenTelemetry spans/metrics and Azure Monitor telemetry when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set.
 - KQL query pack is under `scripts/kusto/kql/`.
 - Run one query:
-   - `scripts/kusto/run_kql.sh scripts/kusto/kql/01_research_requests_overview.kql 24h table`
+  - `scripts/kusto/run_kql.sh scripts/kusto/kql/01_research_requests_overview.kql 24h table`
 - Run full suite and store JSON results under `scripts/kusto/results/<timestamp>/`:
-   - `scripts/kusto/run_suite.sh 24h`
-   - `scripts/kusto/run-observability-suite.sh --timespan 24h`
+  - `scripts/kusto/run_suite.sh 24h`
+  - `scripts/kusto/run-observability-suite.sh --timespan 24h`
 
 ## Verify Azure Deployment
 

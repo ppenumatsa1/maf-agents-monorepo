@@ -9,6 +9,8 @@ Researcher agent built with FastAPI and Microsoft Agent Framework (MAF).
 - Request/response schemas: `app/api/v1/schemas/research.py`
 - Research module: `app/modules/research/service.py`
 - MAF orchestration: `app/maf/workflows/research_workflow.py`
+- MAF prompts: `app/maf/prompts/prompts.py`
+- MAF tools (DuckDuckGo web search): `app/maf/tools.py`
 - Security/auth dependencies: `app/core/security/*`
 - Observability wiring: `app/core/observability/telemetry.py`
 

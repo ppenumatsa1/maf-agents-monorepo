@@ -7,7 +7,7 @@
    - Local default (`REQUIRE_AUTH=false`): anonymous principal allowed.
    - Auth enabled (`REQUIRE_AUTH=true`): Entra JWT validated and required route role enforced.
 3. Route records request telemetry and calls the research service.
-4. Service runs researcher → writer → reviewer workflow via MAF.
+4. Service runs researcher → reviewer → writer workflow via MAF.
 5. API returns summary payload (or stream chunks for SSE).
 
 ## Inputs
