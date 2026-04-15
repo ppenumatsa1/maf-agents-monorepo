@@ -94,7 +94,16 @@ Enable Entra auth locally by setting `REQUIRE_AUTH=true` and supplying required 
   - `scripts/kusto/run_kql.sh scripts/kusto/kql/01_research_requests_overview.kql 24h table`
 - Run full suite and store JSON results under `scripts/kusto/results/<timestamp>/`:
   - `scripts/kusto/run_suite.sh 24h`
-  - `scripts/kusto/run-observability-suite.sh --timespan 24h`
+  - `scripts/kusto/run-observability-suite.sh`
+
+## Entra Split Model
+
+Azure environments use split app registrations:
+
+- API app registration owns app roles and audience (`ENTRA_API_APP_ID`, `ENTRA_API_AUDIENCE`)
+- Client app registration acquires tokens (`ENTRA_CLIENT_APP_ID`, `ENTRA_CLIENT_ID`)
+
+Use scope format `api://<api-app-id>/.default` when running verification scripts in Azure mode.
 
 ## Verify Azure Deployment
 

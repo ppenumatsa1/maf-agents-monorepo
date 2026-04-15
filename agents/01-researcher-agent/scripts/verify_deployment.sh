@@ -183,7 +183,7 @@ HEALTH_RESPONSE=""
 HEALTH_STATUS=""
 for attempt in $(seq 1 20); do
   if HEALTH_RESPONSE=$(curl_with_auth -sS --max-time 10 -D - "$BASE_URL/health" 2>/dev/null); then
-    HEALTH_STATUS=$(echo "$HEALTH_RESPONSE" | head -1 | awk '{print $2}')
+    HEALTH_STATUS=$(sed -n '1p' <<<"$HEALTH_RESPONSE" | awk '{print $2}')
     if [ "$HEALTH_STATUS" = "200" ]; then
       break
     fi
@@ -225,7 +225,7 @@ RESEARCH_RESPONSE=$(curl_with_auth -sS --max-time 180 -D - \
   -X POST "$BASE_URL/v1/research" \
   -H "Content-Type: application/json" \
   -d "$RESEARCH_PAYLOAD")
-RESEARCH_STATUS=$(echo "$RESEARCH_RESPONSE" | head -1 | awk '{print $2}')
+RESEARCH_STATUS=$(sed -n '1p' <<<"$RESEARCH_RESPONSE" | awk '{print $2}')
 RESEARCH_BODY=$(echo "$RESEARCH_RESPONSE" | sed -n '/^\r$/,$p' | sed '1d')
 
 if [ "$RESEARCH_STATUS" = "200" ]; then
@@ -249,12 +249,12 @@ STREAM_RESPONSE=$(curl_with_auth -sS --max-time 180 -D - \
   -X POST "$BASE_URL/v1/research/stream" \
   -H "Content-Type: application/json" \
   -d "$RESEARCH_PAYLOAD")
-STREAM_STATUS=$(echo "$STREAM_RESPONSE" | head -1 | awk '{print $2}')
+STREAM_STATUS=$(sed -n '1p' <<<"$STREAM_RESPONSE" | awk '{print $2}')
 STREAM_HEADERS=$(echo "$STREAM_RESPONSE" | sed -n '1,/^\r$/p' | tr -d '\r')
 STREAM_BODY=$(echo "$STREAM_RESPONSE" | sed -n '/^\r$/,$p' | sed '1d')
 
 if [ "$STREAM_STATUS" = "200" ]; then
-  if echo "$STREAM_HEADERS" | grep -iq '^content-type: text/event-stream'; then
+  if grep -iq '^content-type: text/event-stream' <<<"$STREAM_HEADERS"; then
     echo "  /v1/research/stream returned SSE content type (HTTP 200)"
   else
     echo "  /v1/research/stream missing SSE content type"
@@ -262,7 +262,7 @@ if [ "$STREAM_STATUS" = "200" ]; then
     FAILED_CHECKS=$((FAILED_CHECKS + 1))
   fi
 
-  if echo "$STREAM_BODY" | grep -q 'data:'; then
+  if grep -q 'data:' <<<"$STREAM_BODY"; then
     echo "  /v1/research/stream emitted SSE events"
   elif [ "$STRICT_ENDPOINT_EXECUTION" = "false" ]; then
     echo "  /v1/research/stream reachable but emitted no SSE payload in lenient mode"

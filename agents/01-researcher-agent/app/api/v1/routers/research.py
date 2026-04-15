@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 
 from app.api.v1.schemas.research import ResearchRequest, ResearchResponse
 from app.core.observability.telemetry import (
+    emit_business_event,
     now_ms,
     record_research_completed,
     record_research_failed,
@@ -26,11 +27,23 @@ router = APIRouter(prefix="/v1")
 async def research(request: ResearchRequest) -> ResearchResponse:
     attributes = {
         "topic.length": len(request.topic or ""),
+        "context.present": bool(request.context),
+        "context.length": len(request.context or ""),
         "has_constraints": bool(request.constraints),
+        "constraints.length": len(request.constraints or ""),
         "stream": False,
     }
     started_ms = now_ms()
     record_research_started(attributes)
+    emit_business_event(
+        "research.schema.input",
+        {
+            **attributes,
+            "topic": request.topic or "",
+            "context": request.context or "",
+            "constraints": request.constraints or "",
+        },
+    )
     with start_span(
         "app.http.research",
         attributes,
@@ -47,6 +60,34 @@ async def research(request: ResearchRequest) -> ResearchResponse:
                 duration_ms=now_ms() - started_ms,
                 attributes={**attributes, "summary.length": len(summary)},
             )
+            emit_business_event(
+                "research.schema.output",
+                {
+                    "summary.length": len(summary),
+                    "summary": summary,
+                    "draft.length": len(
+                        getattr(result, "draft", "")
+                        if not isinstance(result, dict)
+                        else result.get("draft", "")
+                    ),
+                    "draft": (
+                        getattr(result, "draft", "")
+                        if not isinstance(result, dict)
+                        else result.get("draft", "")
+                    ),
+                    "review.length": len(
+                        getattr(result, "review", "")
+                        if not isinstance(result, dict)
+                        else result.get("review", "")
+                    ),
+                    "review": (
+                        getattr(result, "review", "")
+                        if not isinstance(result, dict)
+                        else result.get("review", "")
+                    ),
+                    "stream": False,
+                },
+            )
             return result
         except Exception as exc:
             record_research_failed(reason=type(exc).__name__, attributes=attributes)
@@ -58,11 +99,23 @@ async def research_stream(request: ResearchRequest) -> StreamingResponse:
     service = ResearchService()
     attributes = {
         "topic.length": len(request.topic or ""),
+        "context.present": bool(request.context),
+        "context.length": len(request.context or ""),
         "has_constraints": bool(request.constraints),
+        "constraints.length": len(request.constraints or ""),
         "stream": True,
     }
     started_ms = now_ms()
     record_research_started(attributes)
+    emit_business_event(
+        "research.schema.input",
+        {
+            **attributes,
+            "topic": request.topic or "",
+            "context": request.context or "",
+            "constraints": request.constraints or "",
+        },
+    )
 
     async def event_stream() -> AsyncGenerator[str, None]:
         with start_span(

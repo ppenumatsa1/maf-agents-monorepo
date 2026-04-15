@@ -33,8 +33,11 @@ When auth is enabled, missing/invalid tokens return `401`, and missing required 
 - `PORT`: Server port (default: `8000`)
 - `REQUIRE_AUTH`: Enable Entra auth + RBAC checks (`false` by default locally)
 - `ENTRA_TENANT_ID`: Entra tenant ID (required when auth enabled)
-- `ENTRA_CLIENT_ID`: Entra app/client ID (required when auth enabled)
-- `ENTRA_AUDIENCE`: Token audience (defaults to `ENTRA_CLIENT_ID` if omitted)
+- `ENTRA_API_APP_ID`: API app registration ID (audience owner)
+- `ENTRA_CLIENT_APP_ID`: Client app registration ID (token caller)
+- `ENTRA_CLIENT_ID`: Client app registration ID used for token acquisition (required when auth enabled)
+- `ENTRA_API_AUDIENCE`: API audience (recommended)
+- `ENTRA_AUDIENCE`: Effective token audience used by validator (set to API audience)
 - `ENTRA_AUTHORITY`: Authority URL (defaults from tenant when omitted)
 - `ENTRA_ISSUER`: Expected token issuer (defaults from authority when omitted)
 - `ENTRA_JWKS_URL`: JWKS endpoint (defaults from authority when omitted)
@@ -48,7 +51,7 @@ When auth is enabled, missing/invalid tokens return `401`, and missing required 
 - `APPLICATIONINSIGHTS_CONNECTION_STRING`: Azure Monitor connection string
 - `OTEL_SERVICE_NAME`: OpenTelemetry service name
 - `ENABLE_INSTRUMENTATION`: Enable Agent Framework instrumentation (default: `true`)
-- `ENABLE_SENSITIVE_DATA`: Allow sensitive telemetry (default: `false`)
+- `ENABLE_MANUAL_HTTP_INSTRUMENTATION`: Optional fallback to manually instrument FastAPI/requests (default: `false`; keep disabled to avoid duplicate/detached spans when using Azure Monitor distro)
 
 See `.env.example` for a complete template.
 
@@ -77,12 +80,13 @@ From repo root:
 
 - Telemetry is configured in `app/core/observability/telemetry.py`.
 - If `APPLICATIONINSIGHTS_CONNECTION_STRING` is not set, telemetry export is skipped.
+- In this dev profile, MAF observability records full prompt/response content and node-level events (`node.researcher`, `node.reviewer`, `node.writer`) to align with LangGraph-style trace detail.
 - Query pack: `scripts/kusto/kql/*.kql`
 - Execute one query:
   - `scripts/kusto/run_kql.sh scripts/kusto/kql/05_auth_outcomes.kql 24h table`
 - Execute full suite:
   - `scripts/kusto/run_suite.sh 24h`
-  - `scripts/kusto/run-observability-suite.sh --timespan 24h`
+  - `scripts/kusto/run-observability-suite.sh`
 
 ## Tests
 
@@ -113,5 +117,5 @@ Repo-level wrappers:
 Examples:
 
 - Local no-auth verification: `bash scripts/verify_deployment.sh --env local`
-- Azure verification: `bash scripts/verify_deployment.sh --env azure`
-- Azure verification with explicit auth: `bash scripts/verify_deployment.sh --env azure --require-auth --tenant-id <tenant> --client-id <app-id> --client-secret <secret> --scope <api://app-id/.default>`
+- Azure verification: `bash scripts/verify_deployment.sh --env azure --base-url https://<container-app-fqdn>`
+- Azure verification with explicit auth: `bash scripts/verify_deployment.sh --env azure --base-url https://<container-app-fqdn> --tenant-id <tenant> --client-id <client-app-id> --client-secret <secret> --scope <api://<api-app-id>/.default>`

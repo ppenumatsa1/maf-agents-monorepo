@@ -50,8 +50,6 @@ _auth_failures_total = _meter.create_counter(
 def configure_telemetry(app: FastAPI) -> None:
     """Configure Azure Monitor + Agent Framework telemetry."""
     global _telemetry_configured
-    _ = app
-
     if _telemetry_configured:
         logger.debug("Telemetry already configured; skipping duplicate setup.")
         return
@@ -98,10 +96,36 @@ def configure_telemetry(app: FastAPI) -> None:
 
     _telemetry_configured = True
 
-    enable_instrumentation_flag = os.getenv("ENABLE_INSTRUMENTATION", "true").lower()
-    if enable_instrumentation and enable_instrumentation_flag == "true":
-        enable_sensitive_data = os.getenv("ENABLE_SENSITIVE_DATA", "false").lower()
-        enable_instrumentation(enable_sensitive_data=enable_sensitive_data == "true")
+    # Azure Monitor distro already enables supported instrumentations (including FastAPI/requests)
+    # by default. Re-instrumenting manually can create duplicate or detached spans.
+    if os.getenv("ENABLE_MANUAL_HTTP_INSTRUMENTATION", "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
+        _instrument_http(app)
+
+    if enable_instrumentation:
+        # Dev mode requirement: always capture sensitive payload content for richer trace analysis.
+        enable_instrumentation(enable_sensitive_data=True)
+
+
+def _instrument_http(app: FastAPI) -> None:
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.requests import RequestsInstrumentor
+    except Exception as exc:
+        logger.warning(
+            "OpenTelemetry instrumentors unavailable; request tracing may be limited: %s", exc
+        )
+        return
+
+    try:
+        FastAPIInstrumentor.instrument_app(app, exclude_spans=["receive", "send"])
+        RequestsInstrumentor().instrument()
+    except Exception as exc:
+        logger.warning("Failed to instrument FastAPI/requests telemetry: %s", exc)
 
 
 @contextmanager
@@ -165,7 +189,7 @@ def record_stream_chunk(
 ) -> None:
     attrs = _build_attributes({**(attributes or {}), "chunk_index": chunk_index})
     _stream_chunks_total.add(1, attrs)
-    if chunk_index <= 3 or chunk_index % 10 == 0:
+    if chunk_index == 1 or chunk_index % 50 == 0:
         emit_business_event("research.stream.chunk_emitted", attrs)
 
 

@@ -8,6 +8,15 @@ def _to_bool(value: str | None, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _to_int(value: str | None, default: int) -> int:
+    if value is None:
+        return default
+    try:
+        return int(value.strip())
+    except (TypeError, ValueError):
+        return default
+
+
 @dataclass(frozen=True)
 class MAFConfig:
     provider: str
@@ -91,6 +100,6 @@ class AuthConfig:
             authority=authority,
             issuer=issuer,
             jwks_url=resolved_jwks_url,
-            jwks_cache_ttl_seconds=int(os.getenv("ENTRA_JWKS_CACHE_TTL_SECONDS", "300")),
+            jwks_cache_ttl_seconds=_to_int(os.getenv("ENTRA_JWKS_CACHE_TTL_SECONDS"), 300),
             allowed_algorithms=("RS256",),
         )
