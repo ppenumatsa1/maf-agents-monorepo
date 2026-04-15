@@ -96,36 +96,12 @@ def configure_telemetry(app: FastAPI) -> None:
 
     _telemetry_configured = True
 
-    # Azure Monitor distro already enables supported instrumentations (including FastAPI/requests)
-    # by default. Re-instrumenting manually can create duplicate or detached spans.
-    if os.getenv("ENABLE_MANUAL_HTTP_INSTRUMENTATION", "false").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }:
-        _instrument_http(app)
+    # Azure Monitor distro enables supported instrumentations (including FastAPI/requests)
+    # by default. Do not re-instrument manually.
 
     if enable_instrumentation:
         # Dev mode requirement: always capture sensitive payload content for richer trace analysis.
         enable_instrumentation(enable_sensitive_data=True)
-
-
-def _instrument_http(app: FastAPI) -> None:
-    try:
-        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-        from opentelemetry.instrumentation.requests import RequestsInstrumentor
-    except Exception as exc:
-        logger.warning(
-            "OpenTelemetry instrumentors unavailable; request tracing may be limited: %s", exc
-        )
-        return
-
-    try:
-        FastAPIInstrumentor.instrument_app(app, exclude_spans=["receive", "send"])
-        RequestsInstrumentor().instrument()
-    except Exception as exc:
-        logger.warning("Failed to instrument FastAPI/requests telemetry: %s", exc)
 
 
 @contextmanager

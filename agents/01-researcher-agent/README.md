@@ -51,7 +51,6 @@ When auth is enabled, missing/invalid tokens return `401`, and missing required 
 - `APPLICATIONINSIGHTS_CONNECTION_STRING`: Azure Monitor connection string
 - `OTEL_SERVICE_NAME`: OpenTelemetry service name
 - `ENABLE_INSTRUMENTATION`: Enable Agent Framework instrumentation (default: `true`)
-- `ENABLE_MANUAL_HTTP_INSTRUMENTATION`: Optional fallback to manually instrument FastAPI/requests (default: `false`; keep disabled to avoid duplicate/detached spans when using Azure Monitor distro)
 
 See `.env.example` for a complete template.
 
