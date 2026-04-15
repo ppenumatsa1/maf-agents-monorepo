@@ -2,9 +2,13 @@
 
 ## Primary Flow
 
-1. User submits a topic.
-2. System runs researcher → writer → reviewer workflow.
-3. System returns draft, review notes, and final summary.
+1. User sends a request to `POST /v1/research` or `POST /v1/research/stream`.
+2. Auth dependency resolves current principal:
+   - Local default (`REQUIRE_AUTH=false`): anonymous principal allowed.
+   - Auth enabled (`REQUIRE_AUTH=true`): Entra JWT validated and required route role enforced.
+3. Route records request telemetry and calls the research service.
+4. Service runs researcher → writer → reviewer workflow via MAF.
+5. API returns summary payload (or stream chunks for SSE).
 
 ## Inputs
 
@@ -19,23 +23,31 @@
 
 ## Error Handling
 
-- Missing topic → validation error
-- Azure AI project not configured → request fails with configuration error
+- Missing topic → validation error (422)
+- Missing/invalid bearer token (when auth enabled) → 401
+- Missing required role (when auth enabled) → 403
+- Azure AI provider misconfiguration/runtime failure → request fails with error telemetry
 
 ## Technical Flow (Request → Response)
 
 1. HTTP request hits FastAPI route:
-   [agents/01-researcher-agent/app/domain/routes/research.py](../../app/domain/routes/research.py)
-2. Route calls service:
-   [agents/01-researcher-agent/app/domain/services/research_service.py](../../app/domain/services/research_service.py)
-3. Service runs MAF workflow:
+   [agents/01-researcher-agent/app/api/v1/routers/research.py](../../app/api/v1/routers/research.py)
+2. Route auth/RBAC dependencies execute:
+   [agents/01-researcher-agent/app/core/security/dependencies.py](../../app/core/security/dependencies.py)
+3. Route calls service:
+   [agents/01-researcher-agent/app/modules/research/service.py](../../app/modules/research/service.py)
+4. Service runs MAF workflow:
    [agents/01-researcher-agent/app/maf/workflows/research_workflow.py](../../app/maf/workflows/research_workflow.py)
-4. Workflow builds Azure AI agents via provider:
+5. Workflow builds Azure AI agents via provider:
    [agents/01-researcher-agent/app/maf/clients.py](../../app/maf/clients.py)
-5. Agents execute with prompts and tools:
+6. Agents execute prompts/tools and return data:
    - Prompts: [agents/01-researcher-agent/app/maf/prompts/prompts.py](../../app/maf/prompts/prompts.py)
    - Tools: [agents/01-researcher-agent/app/maf/tools.py](../../app/maf/tools.py)
-6. Workflow returns draft/review/summary to route and serializes:
-   [agents/01-researcher-agent/app/domain/schemas/research.py](../../app/domain/schemas/research.py)
+7. Route serializes response schema:
+   [agents/01-researcher-agent/app/api/v1/schemas/research.py](../../app/api/v1/schemas/research.py)
 
-Note: Each request returns `X-Correlation-Id` and logs include `correlation_id`.
+## Observability Flow
+
+- Correlation ID middleware attaches `X-Correlation-Id` and `app.correlation_id` attributes.
+- Route/service telemetry emits request start/completion/failure, stream chunk, and auth outcome signals.
+- KQL suite in `scripts/kusto/kql` supports operational analysis (throughput, failures, latency, auth outcomes, dependencies).

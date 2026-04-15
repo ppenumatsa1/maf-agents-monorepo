@@ -1,0 +1,15 @@
+let windowStart = ago(30m);
+traces
+| where timestamp >= windowStart
+| project
+    timestamp,
+    operation_Id,
+    operation_Name,
+    severityLevel,
+    message,
+    correlation_id = tostring(customDimensions["app.correlation_id"]),
+    code_function = tostring(customDimensions["code.function"]),
+    code_filepath = tostring(customDimensions["code.filepath"]),
+    code_lineno = tostring(customDimensions["code.lineno"])
+| order by timestamp desc
+| take 400

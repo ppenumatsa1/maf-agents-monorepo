@@ -1,0 +1,14 @@
+let windowStart = ago(60m);
+customMetrics
+| where timestamp >= windowStart
+| project
+    timestamp,
+    operation_Id,
+    operation_Name,
+    name,
+    value,
+    integration = tostring(customDimensions["integration"]),
+    reason = tostring(customDimensions["reason"]),
+    stream = tostring(customDimensions["stream"])
+| order by timestamp desc
+| take 400

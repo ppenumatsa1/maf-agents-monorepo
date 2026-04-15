@@ -1,0 +1,83 @@
+let windowStart = ago(30m);
+let latestOp = toscalar(
+    requests
+    | where timestamp >= windowStart
+    | where name has "/v1/research"
+    | top 1 by timestamp desc
+    | project operation_Id
+);
+union isfuzzy=true
+(
+    requests
+    | where operation_Id == latestOp
+    | project
+        timestamp,
+        itemType = "request",
+        name,
+        details = strcat(
+            "resultCode=", tostring(resultCode),
+            ", success=", tostring(success),
+            ", duration_ms=", tostring(round(duration, 2))
+        ),
+        operation_Id
+),
+(
+    dependencies
+    | where operation_Id == latestOp
+    | project
+        timestamp,
+        itemType = "dependency",
+        name,
+        details = strcat(
+            "type=", tostring(type),
+            ", target=", tostring(target),
+            ", resultCode=", tostring(resultCode),
+            ", duration_ms=", tostring(round(duration, 2))
+        ),
+        operation_Id
+),
+(
+    traces
+    | where operation_Id == latestOp
+    | project
+        timestamp,
+        itemType = "trace",
+        name = tostring(message),
+        details = strcat(
+            "severity=", tostring(severityLevel),
+            ", correlation_id=", tostring(customDimensions["app.correlation_id"])
+        ),
+        operation_Id
+),
+(
+    exceptions
+    | where operation_Id == latestOp
+    | project
+        timestamp,
+        itemType = "exception",
+        name = tostring(type),
+        details = tostring(outerMessage),
+        operation_Id
+),
+(
+    customEvents
+    | where operation_Id == latestOp
+    | project
+        timestamp,
+        itemType = "customEvent",
+        name,
+        details = tostring(customDimensions),
+        operation_Id
+),
+(
+    customMetrics
+    | where operation_Id == latestOp
+    | project
+        timestamp,
+        itemType = "customMetric",
+        name,
+        details = strcat("value=", tostring(value)),
+        operation_Id
+)
+| where isnotempty(operation_Id)
+| order by timestamp asc

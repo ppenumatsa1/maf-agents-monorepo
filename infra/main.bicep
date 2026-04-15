@@ -48,6 +48,30 @@ type ModelDeployment = {
 @description('Azure AI Foundry model deployments')
 param modelDeployments ModelDeployment[]
 
+@description('Enable auth middleware in the app')
+param requireAuth string = 'false'
+
+@description('Microsoft Entra tenant ID')
+param entraTenantId string = ''
+
+@description('Microsoft Entra client/application ID')
+param entraClientId string = ''
+
+@description('Expected audience claim')
+param entraAudience string = ''
+
+@description('Token authority URL')
+param entraAuthority string = ''
+
+@description('Token issuer URL')
+param entraIssuer string = ''
+
+@description('JWKS endpoint URL')
+param entraJwksUrl string = ''
+
+@description('JWKS cache TTL in seconds')
+param entraJwksCacheTtlSeconds int = 300
+
 var resourceToken = toLower(uniqueString(resourceGroup().id, envName))
 var namePrefix = 'maf${resourceToken}'
 var logAnalyticsName = '${namePrefix}-law'
@@ -159,6 +183,14 @@ module containerApp 'modules/container-app.bicep' = {
     appInsightsConnectionString: appInsights.outputs.connectionString
     foundryProjectsEndpoint: 'https://${foundryResource.outputs.accountName}.services.ai.azure.com/api/projects/${foundryProject.outputs.projectName}'
     foundryModelDeploymentName: primaryDeployment.name
+    requireAuth: requireAuth
+    entraTenantId: entraTenantId
+    entraClientId: entraClientId
+    entraAudience: entraAudience
+    entraAuthority: entraAuthority
+    entraIssuer: entraIssuer
+    entraJwksUrl: entraJwksUrl
+    entraJwksCacheTtlSeconds: entraJwksCacheTtlSeconds
   }
   dependsOn: [
     acrRbac

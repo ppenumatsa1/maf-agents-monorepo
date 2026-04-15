@@ -1,0 +1,12 @@
+let windowStart = ago(30m);
+requests
+| where timestamp >= windowStart
+| where name has "/health" or name has "/v1/research"
+| summarize
+    total_requests = count(),
+    successful_requests = countif(tostring(success) == "True"),
+    failed_requests = countif(tostring(success) == "False"),
+    avg_duration_ms = round(avg(duration), 2),
+    p95_duration_ms = round(percentile(duration, 95), 2)
+  by operation_Name, resultCode
+| order by operation_Name asc, resultCode asc

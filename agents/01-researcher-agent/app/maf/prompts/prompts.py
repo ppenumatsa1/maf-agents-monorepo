@@ -1,4 +1,4 @@
-from app.domain.schemas.research import ResearchRequest
+from app.api.v1.schemas.research import ResearchRequest
 
 RESEARCHER_INSTRUCTIONS = (
     "You are a meticulous researcher.\n"

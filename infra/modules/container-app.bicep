@@ -32,6 +32,30 @@ param foundryProjectsEndpoint string
 @description('Azure AI Foundry model deployment name')
 param foundryModelDeploymentName string
 
+@description('Enable auth middleware in the app')
+param requireAuth string
+
+@description('Microsoft Entra tenant ID')
+param entraTenantId string
+
+@description('Microsoft Entra client/application ID')
+param entraClientId string
+
+@description('Expected audience claim')
+param entraAudience string
+
+@description('Token authority URL')
+param entraAuthority string
+
+@description('Token issuer URL')
+param entraIssuer string
+
+@description('JWKS endpoint URL')
+param entraJwksUrl string
+
+@description('JWKS cache TTL in seconds')
+param entraJwksCacheTtlSeconds int
+
 resource app 'Microsoft.App/containerApps@2023-05-01' = {
   name: name
   location: location
@@ -78,6 +102,38 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'FOUNDRY_MODEL_DEPLOYMENT_NAME'
               value: foundryModelDeploymentName
+            }
+            {
+              name: 'REQUIRE_AUTH'
+              value: requireAuth
+            }
+            {
+              name: 'ENTRA_TENANT_ID'
+              value: entraTenantId
+            }
+            {
+              name: 'ENTRA_CLIENT_ID'
+              value: entraClientId
+            }
+            {
+              name: 'ENTRA_AUDIENCE'
+              value: entraAudience
+            }
+            {
+              name: 'ENTRA_AUTHORITY'
+              value: entraAuthority
+            }
+            {
+              name: 'ENTRA_ISSUER'
+              value: entraIssuer
+            }
+            {
+              name: 'ENTRA_JWKS_URL'
+              value: entraJwksUrl
+            }
+            {
+              name: 'ENTRA_JWKS_CACHE_TTL_SECONDS'
+              value: '${entraJwksCacheTtlSeconds}'
             }
           ]
           resources: {

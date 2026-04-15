@@ -6,6 +6,11 @@ import pytest
 TOPICS = ["AI safety", "Battery tech", "Quantum computing"]
 
 
+def _auth_headers() -> dict[str, str]:
+    token = os.getenv("SMOKE_BEARER_TOKEN")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
 @pytest.mark.skipif(not os.getenv("SMOKE_BASE_URL"), reason="SMOKE_BASE_URL not set")
 def test_live_health() -> None:
     base_url = os.environ["SMOKE_BASE_URL"].rstrip("/")
@@ -20,6 +25,7 @@ def test_live_research(topic: str) -> None:
     response = httpx.post(
         f"{base_url}/v1/research",
         json={"topic": topic},
+        headers=_auth_headers(),
         timeout=90,
     )
     assert response.status_code == 200
@@ -35,13 +41,13 @@ def test_live_research_stream(topic: str) -> None:
         "POST",
         f"{base_url}/v1/research/stream",
         json={"topic": topic},
+        headers=_auth_headers(),
         timeout=90,
     ) as response:
         assert response.status_code == 200
         saw_event = False
         for chunk in response.iter_text():
-            if "event:" in chunk or "data:" in chunk:
+            if "data:" in chunk:
                 saw_event = True
-            if "event: done" in chunk:
                 break
         assert saw_event

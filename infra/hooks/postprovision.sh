@@ -31,14 +31,60 @@ set -a
 . "$AZD_ENV_FILE"
 set +a
 
+if command -v az >/dev/null 2>&1; then
+  APP_INSIGHTS_RESOURCE_ID="${APPLICATIONINSIGHTS_RESOURCE_ID:-}"
+  if [ -z "$APP_INSIGHTS_RESOURCE_ID" ] && [ -n "${AZURE_RESOURCE_GROUP:-}" ]; then
+    APP_INSIGHTS_RESOURCE_ID=$(az resource list \
+      -g "$AZURE_RESOURCE_GROUP" \
+      --resource-type "microsoft.insights/components" \
+      --query "[0].id" -o tsv 2>/dev/null || true)
+  fi
+
+  if [ -n "$APP_INSIGHTS_RESOURCE_ID" ]; then
+    APP_INSIGHTS_NAME="${APP_INSIGHTS_RESOURCE_ID##*/}"
+    APP_INSIGHTS_CONNECTION_STRING=$(az monitor app-insights component show \
+      -g "$AZURE_RESOURCE_GROUP" \
+      -a "$APP_INSIGHTS_NAME" \
+      --query "connectionString" -o tsv 2>/dev/null || true)
+
+    echo "Persisting Application Insights values to azd env."
+    azd env set APPLICATIONINSIGHTS_RESOURCE_ID "$APP_INSIGHTS_RESOURCE_ID"
+    if [ -n "$APP_INSIGHTS_CONNECTION_STRING" ]; then
+      azd env set APPLICATIONINSIGHTS_CONNECTION_STRING "$APP_INSIGHTS_CONNECTION_STRING"
+    fi
+  else
+    echo "Application Insights resource not found; skipping App Insights env sync."
+  fi
+fi
+
 echo "Writing agent .env from azd values."
 cat > "$AGENT_ENV_FILE" <<EOF
-FOUNDRY_PROJECTS_ENDPOINT="${FOUNDRY_PROJECTS_ENDPOINT}"
-FOUNDRY_MODEL_DEPLOYMENT_NAME="${FOUNDRY_MODEL_DEPLOYMENT_NAME}"
+FOUNDRY_PROJECTS_ENDPOINT="${FOUNDRY_PROJECTS_ENDPOINT:-}"
+FOUNDRY_MODEL_DEPLOYMENT_NAME="${FOUNDRY_MODEL_DEPLOYMENT_NAME:-}"
+REQUIRE_AUTH="${REQUIRE_AUTH:-false}"
+ENTRA_TENANT_ID="${ENTRA_TENANT_ID:-}"
+ENTRA_CLIENT_ID="${ENTRA_CLIENT_ID:-}"
+ENTRA_AUDIENCE="${ENTRA_AUDIENCE:-}"
+ENTRA_API_AUDIENCE="${ENTRA_API_AUDIENCE:-${ENTRA_AUDIENCE:-}}"
+ENTRA_SCOPE="${ENTRA_SCOPE:-}"
+ENTRA_AUTHORITY="${ENTRA_AUTHORITY:-}"
+ENTRA_ISSUER="${ENTRA_ISSUER:-}"
+ENTRA_JWKS_URL="${ENTRA_JWKS_URL:-}"
+ENTRA_JWKS_CACHE_TTL_SECONDS="${ENTRA_JWKS_CACHE_TTL_SECONDS:-300}"
 EOF
 
 if command -v azd >/dev/null 2>&1; then
   echo "Setting azd env values from .env"
-  azd env set FOUNDRY_PROJECTS_ENDPOINT "$FOUNDRY_PROJECTS_ENDPOINT"
-  azd env set FOUNDRY_MODEL_DEPLOYMENT_NAME "$FOUNDRY_MODEL_DEPLOYMENT_NAME"
+  azd env set FOUNDRY_PROJECTS_ENDPOINT "${FOUNDRY_PROJECTS_ENDPOINT:-}"
+  azd env set FOUNDRY_MODEL_DEPLOYMENT_NAME "${FOUNDRY_MODEL_DEPLOYMENT_NAME:-}"
+  azd env set REQUIRE_AUTH "${REQUIRE_AUTH:-false}"
+  azd env set ENTRA_TENANT_ID "${ENTRA_TENANT_ID:-}"
+  azd env set ENTRA_CLIENT_ID "${ENTRA_CLIENT_ID:-}"
+  azd env set ENTRA_AUDIENCE "${ENTRA_AUDIENCE:-}"
+  azd env set ENTRA_API_AUDIENCE "${ENTRA_API_AUDIENCE:-${ENTRA_AUDIENCE:-}}"
+  azd env set ENTRA_SCOPE "${ENTRA_SCOPE:-}"
+  azd env set ENTRA_AUTHORITY "${ENTRA_AUTHORITY:-}"
+  azd env set ENTRA_ISSUER "${ENTRA_ISSUER:-}"
+  azd env set ENTRA_JWKS_URL "${ENTRA_JWKS_URL:-}"
+  azd env set ENTRA_JWKS_CACHE_TTL_SECONDS "${ENTRA_JWKS_CACHE_TTL_SECONDS:-300}"
 fi
