@@ -1,0 +1,12 @@
+let windowStart = ago(30m);
+exceptions
+| where timestamp >= windowStart
+| project
+    timestamp,
+    operation_Id,
+    operation_Name,
+    type,
+    outerMessage,
+    problemId,
+    cloud_RoleName
+| order by timestamp desc

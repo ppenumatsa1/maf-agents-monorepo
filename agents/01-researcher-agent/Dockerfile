@@ -18,11 +18,23 @@ RUN pip install --no-cache-dir --upgrade pip \
 FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    AZURE_CONFIG_DIR=/home/app/.azure
 
 WORKDIR /app
 
-RUN addgroup --system app && adduser --system --ingroup app app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    apt-transport-https \
+    lsb-release \
+    gnupg \
+    && curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN addgroup --system app && adduser --system --ingroup app --home /home/app app \
+    && mkdir -p /home/app/.azure \
+    && chown -R app:app /home/app
 
 COPY --from=builder /install /usr/local
 COPY app /app/app

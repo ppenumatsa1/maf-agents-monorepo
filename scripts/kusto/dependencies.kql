@@ -1,0 +1,11 @@
+let windowStart = ago(30m);
+dependencies
+| where timestamp >= windowStart
+| summarize
+    total_dependencies = count(),
+    successful_dependencies = countif(tostring(success) == "True"),
+    failed_dependencies = countif(tostring(success) == "False"),
+    avg_duration_ms = round(avg(duration), 2)
+  by name, type, target, resultCode
+| order by total_dependencies desc, name asc
+| take 200

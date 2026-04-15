@@ -1,8 +1,8 @@
-# Copilot Instructions – LangGraph Agents Monorepo
+# Copilot Instructions - MAF Agents Monorepo
 
 ## Purpose
 
-This repository is a production-ready monorepo for multiple AI agents.
+This repository is a production-ready monorepo for Microsoft Agent Framework (MAF) agents.
 Copilot must follow these rules strictly to avoid architectural drift.
 
 ---
@@ -15,6 +15,7 @@ Copilot must follow these rules strictly to avoid architectural drift.
   - infra/
   - azure.yaml
   - root Makefile
+  - root scripts/
 - Agents must not import code from other agents.
 
 ---
@@ -37,9 +38,11 @@ Copilot must follow these rules strictly to avoid architectural drift.
   - FastAPI entrypoint
   - MS Agent Framework workflow + agent loops
   - Clear separation of:
+    - app/api (versioned HTTP routes + schemas)
+    - app/modules (feature services and domain models)
     - app/core
-    - app/domain
     - app/maf
+  - Per-agent scripts directory for quality and verification tasks
   - Per-agent Dockerfile and Makefile
 
 ---
@@ -67,9 +70,15 @@ Copilot must follow these rules strictly to avoid architectural drift.
 
 ### Azure Monitor / App Insights KQL reuse
 
-- Save reusable KQL queries in the repo under a queries/ folder when team-shared.
+- Save reusable KQL queries in the repo under scripts/kusto/kql/ when team-shared.
 - Prefer parameterized workbooks for repeatable analysis (correlation_id, operation_id, time range).
 - Store workspace IDs in env vars (e.g., AZURE_LOG_ANALYTICS_WORKSPACE_ID).
+
+### Verification workflow
+
+- Keep deployment checks in agent-level scripts/verify_deployment.sh.
+- Local verification defaults to no-auth checks.
+- Azure verification should support Entra client credentials and auto-resolve CONTAINER_APP_FQDN from azd env.
 
 ---
 
@@ -86,6 +95,7 @@ Copilot must follow these rules strictly to avoid architectural drift.
 
 - Tests must be written with pytest and live under tests/
 - Keep lint/format/sort configuration consistent across agents (ruff/black/isort)
+- Prefer invoking quality checks via scripts (scripts/format.sh, scripts/lint.sh, scripts/test.sh).
 
 ---
 

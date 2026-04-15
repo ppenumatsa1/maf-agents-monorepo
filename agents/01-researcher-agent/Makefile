@@ -1,60 +1,73 @@
 SHELL := /bin/bash
-
-IMAGE ?= researcher-agent
+PYTHON ?= python3
 PORT ?= 8000
+IMAGE ?= researcher-agent
 CONTAINER_NAME ?= researcher-agent-local
+REQUIRE_AUTH ?= false
+ENABLE_TELEMETRY ?= false
+COMPOSE ?= docker compose
+COMPOSE_FILE ?= docker-compose.yml
+COMPOSE_ARGS ?= -f $(COMPOSE_FILE)
+ARGS ?=
 
-.PHONY: help
-help:
-	@echo "Targets:"
-	@echo "  install       - Install package"
-	@echo "  install-dev   - Install package with dev + test extras"
-	@echo "  run           - Run uvicorn locally"
-	@echo "  run-docker    - Build and run Docker container"
-	@echo "  stop-docker   - Stop Docker container"
-	@echo "  format        - Format code with black"
-	@echo "  lint          - Lint code with ruff"
-	@echo "  test          - Run tests"
-	@echo "  build         - Build Docker image"
-	@echo "  evals         - Run evaluations (placeholder)"
+.PHONY: help setup deps precommit run up up-build down logs lint format format-check test smoke test-smoke evals verify verify-deployment build run-docker stop-docker install install-dev
 
-.PHONY: run
-run:
-	uvicorn app.main:create_app --host 0.0.0.0 --port $(PORT) --reload
+help: ## Display available targets
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  %-16s %s\n", $$1, $$2}'
 
-.PHONY: install
-install:
-	python -m pip install -e .
+setup: deps precommit ## Bootstrap local developer environment
 
-.PHONY: install-dev
-install-dev:
-	python -m pip install -e .[dev,test]
+deps: ## Install Python dependencies into the active environment
+	$(PYTHON) -m pip install '.[dev,test]'
+	rm -rf build
 
-.PHONY: run-docker
-run-docker:
-	docker build -t $(IMAGE) .
-	docker run --rm --name $(CONTAINER_NAME) -p $(PORT):8000 --env-file .env $(IMAGE)
+precommit: ## Install git hooks for lint/format checks
+	@if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
+		pre-commit install; \
+	else \
+		echo "Skipping pre-commit install (not inside a git repository)."; \
+	fi
 
-.PHONY: stop-docker
-stop-docker:
-	@docker rm -f $(CONTAINER_NAME) >/dev/null 2>&1 || true
+run: ## Run uvicorn locally (auth and telemetry export disabled)
+	REQUIRE_AUTH=false ENABLE_TELEMETRY=false $(PYTHON) -m uvicorn app.main:create_app --factory --reload --port $(PORT)
 
-.PHONY: format
-format:
-	black app tests
+up: ## Start Docker container from existing image
+	CONTAINER_NAME=$(CONTAINER_NAME) IMAGE=$(IMAGE) PORT=$(PORT) REQUIRE_AUTH=false ENABLE_TELEMETRY=false $(COMPOSE) $(COMPOSE_ARGS) up -d
 
-.PHONY: lint
-lint:
-	ruff check app tests
+up-build: ## Rebuild image and start Docker container
+	CONTAINER_NAME=$(CONTAINER_NAME) IMAGE=$(IMAGE) PORT=$(PORT) REQUIRE_AUTH=false ENABLE_TELEMETRY=false $(COMPOSE) $(COMPOSE_ARGS) up -d --build
 
-.PHONY: test
-test:
-	pytest -q
+down: ## Stop Docker container
+	CONTAINER_NAME=$(CONTAINER_NAME) IMAGE=$(IMAGE) PORT=$(PORT) REQUIRE_AUTH=$(REQUIRE_AUTH) ENABLE_TELEMETRY=$(ENABLE_TELEMETRY) $(COMPOSE) $(COMPOSE_ARGS) down --remove-orphans
 
-.PHONY: evals
-evals:
+logs: ## Tail Docker Compose logs
+	CONTAINER_NAME=$(CONTAINER_NAME) IMAGE=$(IMAGE) PORT=$(PORT) REQUIRE_AUTH=$(REQUIRE_AUTH) ENABLE_TELEMETRY=$(ENABLE_TELEMETRY) $(COMPOSE) $(COMPOSE_ARGS) logs -f --tail 200
+
+build: ## Build Docker image via Compose
+	CONTAINER_NAME=$(CONTAINER_NAME) IMAGE=$(IMAGE) PORT=$(PORT) REQUIRE_AUTH=$(REQUIRE_AUTH) ENABLE_TELEMETRY=$(ENABLE_TELEMETRY) $(COMPOSE) $(COMPOSE_ARGS) build
+
+format: ## Run isort followed by Black
+	./scripts/format.sh
+
+format-check: ## Check formatting with Black
+	black --check app tests
+
+lint: ## Run Ruff checks
+	./scripts/lint.sh
+
+test: ## Execute pytest suite
+	./scripts/test.sh
+
+smoke: ## Execute smoke pytest against SMOKE_BASE_URL
+	REQUIRE_AUTH=false SMOKE_BASE_URL=http://localhost:$(PORT) pytest tests/test_smoke_live.py -q
+
+test-smoke: ## Execute local smoke tests with auth disabled
+	./scripts/test_smoke.sh
+
+evals: ## Run evaluations
 	@echo "evals: add evaluation runner"
 
-.PHONY: build
-build:
-	docker build -t $(IMAGE) .
+verify: ## Run post-deployment verification checks
+	bash ./scripts/verify_deployment.sh $(ARGS)
+
+verify-deployment: verify ## Compatibility alias for verify

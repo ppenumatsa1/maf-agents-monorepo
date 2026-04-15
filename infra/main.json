@@ -5,8 +5,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.37.4.10188",
-      "templateHash": "5591433712977189836"
+      "version": "0.41.2.15936",
+      "templateHash": "4832370731401604844"
     }
   },
   "definitions": {
@@ -116,6 +116,62 @@
       "metadata": {
         "description": "Azure AI Foundry model deployments"
       }
+    },
+    "requireAuth": {
+      "type": "string",
+      "defaultValue": "false",
+      "metadata": {
+        "description": "Enable auth middleware in the app"
+      }
+    },
+    "entraTenantId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Microsoft Entra tenant ID"
+      }
+    },
+    "entraClientId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Microsoft Entra client/application ID"
+      }
+    },
+    "entraAudience": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Expected audience claim"
+      }
+    },
+    "entraAuthority": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Token authority URL"
+      }
+    },
+    "entraIssuer": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Token issuer URL"
+      }
+    },
+    "entraJwksUrl": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "JWKS endpoint URL"
+      }
+    },
+    "entraJwksCacheTtlSeconds": {
+      "type": "int",
+      "defaultValue": 300,
+      "metadata": {
+        "description": "JWKS cache TTL in seconds"
+      }
     }
   },
   "variables": {
@@ -132,7 +188,7 @@
   "resources": {
     "logAnalytics": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('logAnalytics-{0}', uniqueString('logAnalytics', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -156,8 +212,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "2446640253778501212"
+              "version": "0.41.2.15936",
+              "templateHash": "3064570931480960411"
             }
           },
           "parameters": {
@@ -213,7 +269,7 @@
     },
     "appInsights": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('appInsights-{0}', uniqueString('appInsights', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -241,8 +297,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "9608016226346649439"
+              "version": "0.41.2.15936",
+              "templateHash": "9093069546077139653"
             }
           },
           "parameters": {
@@ -299,7 +355,7 @@
     },
     "acr": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('acr-{0}', uniqueString('acr', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -320,8 +376,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "6254944347662220293"
+              "version": "0.41.2.15936",
+              "templateHash": "15434063849195085559"
             }
           },
           "parameters": {
@@ -367,7 +423,7 @@
     },
     "identity": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('identity-{0}', uniqueString('identity', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -388,8 +444,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "1631453396138815854"
+              "version": "0.41.2.15936",
+              "templateHash": "7603820227817523308"
             }
           },
           "parameters": {
@@ -433,7 +489,7 @@
     },
     "foundryResource": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('foundryResource-{0}', uniqueString('foundryResource', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -460,8 +516,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "15938813497541638166"
+              "version": "0.41.2.15936",
+              "templateHash": "4583534448096106952"
             }
           },
           "parameters": {
@@ -538,7 +594,7 @@
     },
     "foundryProject": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('foundryProject-{0}', uniqueString('foundryProject', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -571,8 +627,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "2888876518170030267"
+              "version": "0.41.2.15936",
+              "templateHash": "15612153144976033553"
             }
           },
           "parameters": {
@@ -651,7 +707,7 @@
     },
     "foundryModels": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('foundryModels-{0}', uniqueString('foundryModels', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -673,8 +729,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "7110635264455190006"
+              "version": "0.41.2.15936",
+              "templateHash": "16833243657121495116"
             }
           },
           "definitions": {
@@ -784,7 +840,7 @@
     },
     "acrRbac": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('acrRbac-{0}', uniqueString('acrRbac', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -808,8 +864,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "17788404860504902281"
+              "version": "0.41.2.15936",
+              "templateHash": "1115203981715953760"
             }
           },
           "parameters": {
@@ -840,7 +896,7 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', last(split(parameters('acrId'), '/')))]",
+              "scope": "[resourceId('Microsoft.ContainerRegistry/registries', last(split(parameters('acrId'), '/')))]",
               "name": "[guid(parameters('acrId'), parameters('principalId'), variables('acrPullRoleId'))]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('acrPullRoleId'))]",
@@ -851,7 +907,7 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', last(split(parameters('foundryId'), '/')))]",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', last(split(parameters('foundryId'), '/')))]",
               "name": "[guid(parameters('foundryId'), parameters('principalId'), variables('azureAiUserRoleId'))]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('azureAiUserRoleId'))]",
@@ -870,7 +926,7 @@
     },
     "acaEnv": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('acaEnv-{0}', uniqueString('acaEnv', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -894,8 +950,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "3287862207582025025"
+              "version": "0.41.2.15936",
+              "templateHash": "2572804801579863189"
             }
           },
           "parameters": {
@@ -949,7 +1005,7 @@
     },
     "containerApp": {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2025-04-01",
       "name": "[format('containerApp-{0}', uniqueString('containerApp', deployment().name))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -982,13 +1038,37 @@
             "value": "[reference('identity').outputs.clientId.value]"
           },
           "appInsightsConnectionString": {
-            "value": "[listOutputsWithSecureValues('appInsights', '2022-09-01').connectionString]"
+            "value": "[listOutputsWithSecureValues('appInsights', '2025-04-01').connectionString]"
           },
           "foundryProjectsEndpoint": {
             "value": "[format('https://{0}.services.ai.azure.com/api/projects/{1}', reference('foundryResource').outputs.accountName.value, reference('foundryProject').outputs.projectName.value)]"
           },
           "foundryModelDeploymentName": {
             "value": "[variables('primaryDeployment').name]"
+          },
+          "requireAuth": {
+            "value": "[parameters('requireAuth')]"
+          },
+          "entraTenantId": {
+            "value": "[parameters('entraTenantId')]"
+          },
+          "entraClientId": {
+            "value": "[parameters('entraClientId')]"
+          },
+          "entraAudience": {
+            "value": "[parameters('entraAudience')]"
+          },
+          "entraAuthority": {
+            "value": "[parameters('entraAuthority')]"
+          },
+          "entraIssuer": {
+            "value": "[parameters('entraIssuer')]"
+          },
+          "entraJwksUrl": {
+            "value": "[parameters('entraJwksUrl')]"
+          },
+          "entraJwksCacheTtlSeconds": {
+            "value": "[parameters('entraJwksCacheTtlSeconds')]"
           }
         },
         "template": {
@@ -997,8 +1077,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.37.4.10188",
-              "templateHash": "7357097259647502289"
+              "version": "0.41.2.15936",
+              "templateHash": "3424172331586930385"
             }
           },
           "parameters": {
@@ -1067,6 +1147,54 @@
               "metadata": {
                 "description": "Azure AI Foundry model deployment name"
               }
+            },
+            "requireAuth": {
+              "type": "string",
+              "metadata": {
+                "description": "Enable auth middleware in the app"
+              }
+            },
+            "entraTenantId": {
+              "type": "string",
+              "metadata": {
+                "description": "Microsoft Entra tenant ID"
+              }
+            },
+            "entraClientId": {
+              "type": "string",
+              "metadata": {
+                "description": "Microsoft Entra client/application ID"
+              }
+            },
+            "entraAudience": {
+              "type": "string",
+              "metadata": {
+                "description": "Expected audience claim"
+              }
+            },
+            "entraAuthority": {
+              "type": "string",
+              "metadata": {
+                "description": "Token authority URL"
+              }
+            },
+            "entraIssuer": {
+              "type": "string",
+              "metadata": {
+                "description": "Token issuer URL"
+              }
+            },
+            "entraJwksUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "JWKS endpoint URL"
+              }
+            },
+            "entraJwksCacheTtlSeconds": {
+              "type": "int",
+              "metadata": {
+                "description": "JWKS cache TTL in seconds"
+              }
             }
           },
           "resources": [
@@ -1118,6 +1246,38 @@
                         {
                           "name": "FOUNDRY_MODEL_DEPLOYMENT_NAME",
                           "value": "[parameters('foundryModelDeploymentName')]"
+                        },
+                        {
+                          "name": "REQUIRE_AUTH",
+                          "value": "[parameters('requireAuth')]"
+                        },
+                        {
+                          "name": "ENTRA_TENANT_ID",
+                          "value": "[parameters('entraTenantId')]"
+                        },
+                        {
+                          "name": "ENTRA_CLIENT_ID",
+                          "value": "[parameters('entraClientId')]"
+                        },
+                        {
+                          "name": "ENTRA_AUDIENCE",
+                          "value": "[parameters('entraAudience')]"
+                        },
+                        {
+                          "name": "ENTRA_AUTHORITY",
+                          "value": "[parameters('entraAuthority')]"
+                        },
+                        {
+                          "name": "ENTRA_ISSUER",
+                          "value": "[parameters('entraIssuer')]"
+                        },
+                        {
+                          "name": "ENTRA_JWKS_URL",
+                          "value": "[parameters('entraJwksUrl')]"
+                        },
+                        {
+                          "name": "ENTRA_JWKS_CACHE_TTL_SECONDS",
+                          "value": "[format('{0}', parameters('entraJwksCacheTtlSeconds'))]"
                         }
                       ],
                       "resources": {
@@ -1168,7 +1328,7 @@
     },
     "appInsightsConnectionString": {
       "type": "securestring",
-      "value": "[listOutputsWithSecureValues('appInsights', '2022-09-01').connectionString]"
+      "value": "[listOutputsWithSecureValues('appInsights', '2025-04-01').connectionString]"
     },
     "foundryAccountId": {
       "type": "string",

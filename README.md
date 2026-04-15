@@ -3,7 +3,7 @@
 ## Summary
 
 Monorepo for Microsoft Agent Framework (MAF) agents deployed to Azure Container Apps with azd.
-Each agent is an independently deployable FastAPI service following the same layered architecture and observability patterns.
+Each agent is an independently deployable FastAPI service with consistent API structure, auth toggles, and observability patterns.
 
 ## Goals
 
@@ -15,68 +15,105 @@ Each agent is an independently deployable FastAPI service following the same lay
 
 ## What’s Included
 
-- Agent-local FastAPI app with layered architecture (routes → services → repo → core)
-- MAF workflows per agent with nodes, tools, and prompts
-- Structured logging + OpenTelemetry-ready hooks
+- Agent-local FastAPI app (`app/main.py`)
+- Versioned API routes under `app/api/v1/routers`
+- Domain modules under `app/modules/*` (for example `app/modules/research`)
+- Security/auth helpers under `app/core/security`
+- MAF workflows, prompts, and tools under `app/maf`
+- Structured logging + OpenTelemetry + Azure Monitor wiring
 - Dockerfile per agent for containerized runs
 - Root Makefile to orchestrate agent tasks
 - Infra-as-code with Bicep modules
+- Shared KQL query suite and runner scripts in `scripts/kusto/`
 
 ## Structure
 
-- agents/: Self-contained agents
-- infra/: Infrastructure-as-code (Bicep) scaffolding
-- queries/: Shared KQL/workbooks
+- `agents/`: Self-contained agents
+- `infra/`: Infrastructure-as-code (Bicep) scaffolding
+- `scripts/kusto/`: Shared KQL queries, run scripts, and results
 
 ## Prerequisites (Ubuntu/Debian)
 
-Install the required tools on Ubuntu/Debian:
-
-1. Update packages
-   - sudo apt-get update
-2. Install Python 3.11 and venv
-   - sudo apt-get install -y python3.11 python3.11-venv python3-pip
-3. Install Docker (for container builds)
-   - sudo apt-get install -y docker.io
-4. Install Azure CLI
-   - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-5. Install Azure Developer CLI (azd)
-   - curl -fsSL https://aka.ms/install-azd.sh | sudo bash
-6. Install Make (optional)
-   - sudo apt-get install -y make
+1. Update packages  
+   `sudo apt-get update`
+2. Install Python 3.11 and venv  
+   `sudo apt-get install -y python3.11 python3.11-venv python3-pip`
+3. Install Docker (for container builds)  
+   `sudo apt-get install -y docker.io`
+4. Install Azure CLI  
+   `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+5. Install Azure Developer CLI (azd)  
+   `curl -fsSL https://aka.ms/install-azd.sh | sudo bash`
+6. Install Make (optional)  
+   `sudo apt-get install -y make`
 
 ## Quickstart (azd)
 
 1. Clone the repo and enter it
-   - git clone https://github.com/ppenumatsa1/maf-agents-monorepo.git
-   - cd maf-agents-monorepo
+   - `git clone https://github.com/ppenumatsa1/maf-agents-monorepo.git`
+   - `cd maf-agents-monorepo`
 2. Verify Docker is running
-   - docker version
+   - `docker version`
 3. Authenticate and run azd
-   - azd auth login
-   - azd env new
-   - azd up
+   - `azd auth login`
+   - `azd env new`
+   - `azd up`
 
 ## Local Development
 
-Local setup, dependencies, and local run instructions are agent-specific. See agents/01-researcher-agent/README.md.
+Agent setup and API usage are documented in `agents/01-researcher-agent/README.md`.
+
+Common local workflow targets from repo root:
+
+- `make install-dev` – install agent dev/test dependencies
+- `make run` – run the default agent locally
+- `make format` – format code
+- `make lint` – run lint checks
+- `make test` – run unit tests (`REQUIRE_AUTH=false` by default)
+- `make verify` – run lint + formatting checks + tests
+- `make verify-deployment` – run endpoint verification checks
+- `make smoke` – run live smoke tests against local service
+- `make compose-up` / `make compose-down` / `make compose-logs` – manage local Docker Compose stack
+
+Root script wrappers are also available:
+
+- `bash scripts/format.sh`
+- `bash scripts/lint.sh`
+- `bash scripts/test.sh`
+- `bash scripts/verify_deployment.sh --env local`
+- `bash scripts/verify_deployment.sh --env azure`
+
+Auth is disabled by default for local workflows (`REQUIRE_AUTH=false`).
+Enable Entra auth locally by setting `REQUIRE_AUTH=true` and supplying required `ENTRA_*` values.
+
+## Observability & KQL Workflow
+
+- App emits OpenTelemetry spans/metrics and Azure Monitor telemetry when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set.
+- KQL query pack is under `scripts/kusto/kql/`.
+- Run one query:
+  - `scripts/kusto/run_kql.sh scripts/kusto/kql/01_research_requests_overview.kql 24h table`
+- Run full suite and store JSON results under `scripts/kusto/results/<timestamp>/`:
+  - `scripts/kusto/run_suite.sh 24h`
+  - `scripts/kusto/run-observability-suite.sh`
+
+## Entra Split Model
+
+Azure environments use split app registrations:
+
+- API app registration owns app roles and audience (`ENTRA_API_APP_ID`, `ENTRA_API_AUDIENCE`)
+- Client app registration acquires tokens (`ENTRA_CLIENT_APP_ID`, `ENTRA_CLIENT_ID`)
+
+Use scope format `api://<api-app-id>/.default` when running verification scripts in Azure mode.
 
 ## Verify Azure Deployment
 
-Run the smoke tests against the deployed endpoint:
+Run smoke tests against a deployed endpoint:
 
-- SMOKE_BASE_URL=https://<your-app>.azurecontainerapps.io python -m pytest agents/01-researcher-agent/tests/test_smoke_live.py
-
-## Observability
-
-- Structured logging with trace/span correlation
-- OpenTelemetry export to Application Insights
-- MAF spans for workflow execution
-- Tool execution spans (tool calls appear as dependencies)
+- `SMOKE_BASE_URL=https://<your-app>.azurecontainerapps.io python -m pytest agents/01-researcher-agent/tests/test_smoke_live.py`
 
 ## Agent Design Docs
 
-Each agent owns design artifacts under docs/design (PRD, tech stack, project structure, user flow).
+Each agent owns design artifacts under `docs/design` (PRD, tech stack, project structure, user flow).
 
 | Agent               | Workflow                           | Docs                            |
 | ------------------- | ---------------------------------- | ------------------------------- |

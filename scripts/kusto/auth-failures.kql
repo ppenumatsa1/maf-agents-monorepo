@@ -1,0 +1,6 @@
+let windowStart = ago(30m);
+requests
+| where timestamp >= windowStart
+| where resultCode in ("401", "403")
+| summarize count() by resultCode, operation_Name
+| order by resultCode asc, operation_Name asc

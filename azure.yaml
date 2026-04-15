@@ -24,6 +24,16 @@ services:
     hooks:
       predeploy:
         shell: sh
-        run: ../../infra/hooks/predeploy.sh
+        run: ./hooks/predeploy.sh
+        continueOnError: false
 infra:
   path: infra
+  parameters:
+    requireAuth: ${REQUIRE_AUTH}
+    entraTenantId: ${ENTRA_TENANT_ID}
+    entraClientId: ${ENTRA_CLIENT_ID}
+    entraAudience: ${ENTRA_AUDIENCE}
+    entraAuthority: ${ENTRA_AUTHORITY}
+    entraIssuer: ${ENTRA_ISSUER}
+    entraJwksUrl: ${ENTRA_JWKS_URL}
+    entraJwksCacheTtlSeconds: ${ENTRA_JWKS_CACHE_TTL_SECONDS}
